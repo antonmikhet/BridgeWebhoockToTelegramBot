@@ -1,0 +1,18 @@
+{
+  "name": "telegrambridge",
+  "version": "1.0.0",
+  "description": "Bridge WebHoock to TelegramBot",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "AntonMikhet",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.20.1",
+    "express": "^4.18.2",
+    "fs": "^0.0.1-security",
+    "portastic": "^1.0.1"
+  }
+}
