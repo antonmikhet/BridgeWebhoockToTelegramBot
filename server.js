@@ -48,41 +48,52 @@ var pushdata = {
   username:         '',
   projectname:      '',
   defaultbranch:    '',
+  committitle:      '',
+  commitmessage:    '',
   commitstimestamp: '',
   addedfilelength:   0,
   modifyfilelength:  0,
   removefilelength:  0,
 };
 
+function formatString(str) {
+  if (str == null || typeof str !== 'string') {
+    return str;
+  }
+  return str.replace(/\//g, '%2F').replace(/\n/g, '%0A');
+}
+
 app.use(function (req, res) {
-  try{
+  try {
     res.setHeader('Content-Type', 'application/json');
 
-  
-    pushdata.eventname =         JSON.stringify(req.body['event_name'], null, 2);
-    pushdata.username =          JSON.stringify(req.body['user_username'], null, 2);
-    pushdata.projectname =       JSON.stringify(req.body['project']['name'], null, 2);
-    pushdata.commtsmessage =     JSON.stringify(req.body['commits'][0]['title'], null, 2);
-    pushdata.commitstimestamp =  JSON.stringify(req.body['commits'][0]['timestamp'], null, 2);
-    pushdata.addedfilelength =   JSON.stringify(req.body['commits'][0]['added'].length, null, 2);
-    pushdata.modifyfilelength =  JSON.stringify(req.body['commits'][0]['modified'].length, null, 2);
-    pushdata.removefilelength =  JSON.stringify(req.body['commits'][0]['removed'].length, null, 2);
-  
-    pushdata.defaultbranch =     JSON.stringify(req.body['ref'], null, 2);
-    pushdata.defaultbranch =     `"` + pushdata.defaultbranch.substring(pushdata.defaultbranch.lastIndexOf('/') + 1);
-  
+    const commits = req.body.commits || [];
+    const pushdata = {
+      eventname: formatString(req.body.event_name),
+      username: formatString(req.body.user_username),
+      projectname: formatString(req.body.project?.name),
+      commits: commits.map((commit) => ({
+        committitle: formatString(commit?.title),
+        commitmessage: formatString(commit?.message),
+        commitstimestamp: formatString(commit?.timestamp),
+        addedfilelength: commit?.added?.length || 0,
+        modifyfilelength: commit?.modified?.length || 0,
+        removefilelength: commit?.removed?.length || 0,
+      })),
+      defaultbranch: formatString(req.body?.ref),
+    };
+
     SendMessage(CreateString(pushdata));
 
-    res.write    ('you posted:\n');
-    res.end      ('Send successful');
-
-  } catch {
-
-    console.error('Invalid type');
-    res.write    ('you not posted:\n');
-    res.end      ('Send error');
-  };
+    res.write('you posted:\n');
+    res.end('Send successful');
+  } catch (error) {
+    console.error(error);
+    res.write('you not posted:\n');
+    res.end('Send error');
+  }
 });
+
 
 function SendMessage(text){
     var chatid = "-1001636262341";
@@ -92,17 +103,39 @@ function SendMessage(text){
     https.get(url);
 };
 
-function CreateString(struct){
+function CreateString(struct) {
+  const commitsString = struct.commits
+    .map((commit) =>
+      [
+        '<b>Commit title: </b>' + commit.committitle,
+        '<b>Commit message: </b>' + commit.commitmessage,
+        '<b>Time: </b>' + commit.commitstimestamp,
+        '<b>Added file count: </b>' + commit.addedfilelength,
+        '<b>Modify file count: </b>' + commit.modifyfilelength,
+        '<b>Remove file count: </b>' + commit.removefilelength,
+      ].join(' %0A ')
+    )
+    .join(' %0A ' +
+    '----------------------------------' +
+    ' %0A ');
 
-  ResultString =  '<b>New event triggered</b> %0A '                             +
-                  '<b>Project name: </b>'   + struct.projectname +      ' %0A ' +
-                  '<b>User name: </b>'      + struct.username +         ' %0A ' +
-                  '<b>Event name: </b>'     + struct.eventname +        ' %0A ' +
-                  '<b>Commit message: </b>' + struct.commtsmessage +    ' %0A ' +
-                  'Branch: '                + struct.defaultbranch +    ' %0A ' +
-                  'Time: '                  + struct.commitstimestamp + ' %0A ' +
-                  'Added file count: '      + struct.addedfilelength +  ' %0A ' +
-                  'Modify file count: '     + struct.modifyfilelength + ' %0A ' +
-                  'Remove file count: '     + struct.removefilelength + ' %0A ' ;
+  const ResultString =
+    '<b>New event triggered</b> %0A ' +
+    '<b>Project name: </b>' +
+    struct.projectname +
+    ' %0A ' +
+    '<b>User name: </b>' +
+    struct.username +
+    ' %0A ' +
+    '<b>Event name: </b>' +
+    struct.eventname +
+    ' %0A %0A ' +
+    '<b>Branch: </b>' +
+    struct.defaultbranch +
+    ' %0A ' +
+    commitsString +
+    ' %0A %0A '
+
+
   return ResultString;
-};
+}
