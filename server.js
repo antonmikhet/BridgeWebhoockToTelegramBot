@@ -49,7 +49,6 @@ var pushdata = {
         username: '',
         projectname: '',
         defaultbranch: '',
-        committitle: '',
         commitmessage: '',
         commitstimestamp: '',
         addedfilelength: 0,
@@ -74,7 +73,6 @@ app.use(function(req, res) {
                         username: formatString(req.body.user_username),
                         projectname: formatString(req.body.project?.name),
                         commits: commits.map((commit) => ({
-                                committitle: formatString(commit?.title),
                                 commitmessage: formatString(commit?.message),
                                 commitstimestamp: formatString(commit?.timestamp),
                                 addedfilelength: commit?.added?.length || 0,
@@ -107,7 +105,6 @@ function SendMessage(text) {
 function CreateString(struct) {
         const commitsString = struct.commits
                 .map((commit) => [
-                        '<b>Commit title: </b>' + commit.committitle,
                         '<b>Commit message: </b>' + commit.commitmessage,
                         '<b>Time: </b>' + commit.commitstimestamp,
                         '<b>Added file count: </b>' + commit.addedfilelength,
@@ -115,7 +112,7 @@ function CreateString(struct) {
                         '<b>Remove file count: </b>' + commit.removefilelength,
                 ].join(' %0A '))
                 .join(' %0A ' +
-                        '----------------------------------' +
+                        '------------------------------------------------' +
                         ' %0A ');
 
         const ResultString =
@@ -132,7 +129,7 @@ function CreateString(struct) {
                 '<b>Branch: </b>' +
                 struct.defaultbranch +
                 ' %0A ' +
-                '----------------------------------' +
+                '------------------------------------------------' +
                 ' %0A ' +
                 commitsString +
                 ' %0A '
