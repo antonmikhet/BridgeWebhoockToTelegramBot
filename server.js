@@ -13,12 +13,10 @@ const fs = require("fs");
 // input from forms
 const bodyParser = require("body-parser");
 
-// Creating object of key and certificate
-// for SSL
-const options = {
-        key: fs.readFileSync("cert/key.pem"),
-        cert: fs.readFileSync("cert/cert.pem")
-};
+// Default Variables
+const options = {};
+const channelID = '0'; 
+const botToken = '0';
 
 
 // Creating https server by passing
@@ -95,12 +93,41 @@ app.use(function(req, res) {
 
 
 function SendMessage(text) {
-        var chatid = "-1001636262341";
-        var token = "5923052853:AAETSve28RcrjpEXgKt0RF-NpdJh8M126kg";
-        var url = "https://api.telegram.org/bot" + token + "/sendMessage?chat_id=" + chatid + "&parse_mode=HTML&text=%20" + text;
-        console.error(url);
-        https.get(url);
-};
+
+        const data = JSON.stringify({
+            content: text
+        });
+    
+        const options = {
+            hostname: 'discord.com',
+            port: 443,
+            path: `/api/v10/channels/${channelID}/messages`,
+            method: 'POST',
+            headers: {
+                'Authorization': `Bot ${botToken}`,
+                'Content-Type': 'application/json'
+            }
+        };
+    
+        const req = https.request(options, (res) => {
+            let responseData = '';
+    
+            res.on('data', (chunk) => {
+                responseData += chunk;
+            });
+    
+            res.on('end', () => {
+                console.log('Response:', responseData);
+            });
+        });
+    
+        req.on('error', (error) => {
+            console.error('Error:', error);
+        });
+    
+        req.write(data);
+        req.end();
+}
 
 function CreateString(struct) {
         const commitsString = struct.commits
